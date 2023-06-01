@@ -9,7 +9,11 @@ CORS(app)
 def github_stats(username):
     forked = request.args.get('forked', 'true').lower() in ['true', '1']
 
-    # Make request to Github API
+    # Make request to Github API for user details
+    user_api_url = f'https://api.github.com/users/{username}'
+    user_data = requests.get(user_api_url).json()
+
+    # Make request to Github API for user's repos
     repo_api_url = f'https://api.github.com/users/{username}/repos'
     repos = requests.get(repo_api_url).json()
 
@@ -35,7 +39,13 @@ def github_stats(username):
                 languages[repo['language']] = 1
     stats['languages'] = sorted(languages.items(), key=lambda x: x[1], reverse=True)
 
-    return jsonify(stats)
+    # Combine user data and repo statistics
+    data = {
+        'user_data': user_data,
+        'repo_statistics': stats
+    }
+
+    return jsonify(data)
 
 if __name__ == "__main__":
     app.run(debug=True)
